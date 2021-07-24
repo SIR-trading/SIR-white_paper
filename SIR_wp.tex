@@ -1,0 +1,476 @@
+\documentclass[journal,letterpaper,oneside,onecolumn,12pt]{IEEEtran}
+\usepackage[caption=false,font=footnotesize]{subfig}
+%\usepackage{bigints}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amsthm}
+%\usepackage{mathabx}
+\usepackage[hidelinks]{hyperref}
+\usepackage{color}
+\usepackage[detect-all,detect-weight=true]{siunitx}
+\usepackage{booktabs}
+\usepackage{pgfplots}
+\usepackage{nicefrac}
+\usepackage{cite}
+\usepackage{wasysym}
+\usepackage{colortbl}
+\usepackage[showonlyrefs]{mathtools}
+
+
+\sisetup{per-mode=symbol,per-symbol=p}
+
+\usepgfplotslibrary{fillbetween, polar}
+\usetikzlibrary{matrix, shapes.geometric, arrows, patterns} 
+\pgfdeclarelayer{background}
+\pgfsetlayers{background,main}
+
+\tikzstyle{input} = [rectangle, rounded corners, minimum width=2cm, minimum height=1cm, text centered, draw=black, fill=orange!30]
+\tikzstyle{output} = [rectangle, rounded corners, minimum width=2cm, minimum height=1cm, text centered, draw=black, fill=blue!30]
+\tikzstyle{table} = [diamond, minimum width=2cm, minimum height=1cm, text centered, draw=black, fill=green!30]
+
+%\pgfdeclarelayer{background}% determine background layer
+%\pgfsetlayers{background,main}% order of layers
+
+\newcommand{\argmin}[1]{\underset{#1}{\operatorname{arg\,min\,}}}
+\newcommand{\argmax}[1]{\underset{#1}{\operatorname{arg\,max\,}}}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\Diag}{Diag}
+\DeclareMathOperator{\vectorize}{vec}
+\DeclareMathOperator{\E}{\operatorname{\mathbb{E}}}
+
+
+\definecolor{lines-1}{RGB}{228,26,28}
+\definecolor{lines-2}{RGB}{55,126,184}
+\definecolor{lines-3}{RGB}{77,175,74}
+\definecolor{lines-4}{RGB}{152,78,163}
+\definecolor{lines-5}{RGB}{255,127,0}
+\definecolor{lines-6}{RGB}{255,255,51}
+\definecolor{lines-7}{RGB}{166,86,40}
+\definecolor{lines-8}{RGB}{247,129,191}
+\definecolor{lines-9}{RGB}{153,153,153}
+
+\definecolor{verylightyellow}{RGB}{242,237,89}
+\definecolor{verylightgray}{RGB}{200,200,200}
+\definecolor{verylightred}{RGB}{255,191,191}
+\definecolor{verylightgreen}{RGB}{117,234,123}
+
+
+\pgfplotscreateplotcyclelist{myCycleList}{
+	color=lines-1,thick,mark=o,mark size=3\\%
+	color=lines-3,thick,mark=star,mark size=3\\%
+	color=lines-4,thick,mark=square,mark size=3\\%
+	color=lines-2,thick,mark=diamond,mark size=3\\%
+	color=lines-5,thick,mark=triangle,mark size=3\\%
+	color=lines-8,thick,mark=Mercedes star,mark size=3\\%
+	color=lines-7,thick,mark=|,mark size=3\\%
+	color=lines-9,thick,mark=pentagon,mark size=3\\%
+}
+
+
+\pgfplotsset{
+	compat=1.14,
+	%	compat=newest,
+	width =.7\columnwidth, 
+	height=.5\columnwidth,
+	%trim axis left, trim axis right,
+	%every axis/.append style={
+%	ylabel absolute, ylabel style={yshift=-0.30cm},
+%	xlabel absolute, xlabel style={yshift=0.2cm},
+%	label style={font=\footnotesize},
+%	tick label style={font=\footnotesize},
+%	legend style={font=\footnotesize},
+	%		ymajorgrids=true,
+	%		yminorgrids=true,
+	minor grid style={dotted},
+	%}
+}
+
+\newtheorem{definition}{Definition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{theorem}{Theorem}
+\newtheorem{problem}{Problem}
+
+\newcommand\StateX{\Statex\hspace{\algorithmicindent}}
+
+\newcommand{\bbGamma}{{\mathpalette\makebbGamma\relax}}
+\newcommand{\makebbGamma}[2]{%
+	\raisebox{\depth}{\scalebox{1}[-1]{$\mathsurround=0pt#1\mathbb{L}$}}%
+}
+
+\makeatletter
+\newcommand{\pushright}[1]{\ifmeasuring@#1\else\omit\hfill$\displaystyle#1$\fi\ignorespaces}
+\newcommand{\pushleft}[1]{\ifmeasuring@#1\else\omit$\displaystyle#1$\hfill\fi\ignorespaces}
+\newcommand{\subalign}[1]{%
+	\vcenter{%
+		\Let@ \restore@math@cr \default@tag
+		\baselineskip\fontdimen10 \scriptfont\tw@
+		\advance\baselineskip\fontdimen12 \scriptfont\tw@
+		\lineskip\thr@@\fontdimen8 \scriptfont\thr@@
+		\lineskiplimit\lineskip
+		\ialign{\hfil$\m@th\scriptstyle##$&$\m@th\scriptstyle{}##$\crcr
+			#1\crcr
+		}%
+	}
+}
+\newcommand{\vast}{\bBigg@{3.5}}
+\makeatother
+
+
+\allowdisplaybreaks[1]
+
+\begin{document}
+	
+	\title{
+		SIR: Synthetics Implemented Right
+	}
+	
+	
+	\author{
+		Xatarrer \\
+		xatarra@protonmail.com \\
+		\today{}
+		\thanks{This work is licensed under CC BY 4.0. To view a copy of this license, visit \url{http://creativecommons.org/licenses/by/4.0}.\\
+		The author would like to thank Dan Robinson for the constructive comparison between MakerDAO and SIR.}
+	}
+	
+	\maketitle
+	
+	\begin{abstract}
+		SIR is a platform that allows anyone to create two types of synthetic tokens: (A) tokenized margin positions with any leverage, and (B) synthetic tokens pegged 1-to-1 to other tokens. Contrary to standard margin trading in centralized exchanges, SIR's leverage remains constant as price fluctuates.
+		The proposed system is on the far end of the trustless spectrum and it is self-contained, only relying on Uniswap v3 for its price oracle.
+	\end{abstract}
+
+
+	\section{Introduction}
+	
+	Decentralized finance (DeFI) enables new financial primitives in addition to the previously existing ones in traditional finance. For example, Uniswap v1 was a big leap forward in the field of decentralized exchanges thanks to its simple and effective implementation of the automated market maker.
+	Synthetics implemented right (SIR) aims at being the \textit{Uniswap} of stable tokens and leveraged tokens. That is a trustless platform with no governance where users can mint two types of synthetic assets in a completely permissionless manner. The first type are synthetic tokens pegged 1-to-1 to other tokens and backed by any collateral of choice. Such tokens allow their holders to maintain price exposure to other digital assets without some of their downfalls, such as permissioned transactions. For example a stablecoin  pegged to USDC, because it is a good proxy for the US dollar, backed by ETH. The second type are leveraged tokens which are tokenized versions of margin long positions in centralized platforms. 
+	A notable difference with respect to centralized platforms is that the leverage, i.e., the ratio between equity and borrowed capital, is stabilized around a constant value. In turn it mitigates the risk of liquidation because as the price of an asset drops, the debt is adjusted down as well. 
+	The fees collected by the system are distributed to liquidity providers who are in charge of maintaining the constant leverage on a block by block basis.	
+%	We expect that this this level of granularity in rebalancing the leverage ratio 
+	Contrary to centralized exchanges where the margin positions only exists within their walled garden, leveraged tokens are composable and can be imported by other \textit{money legos}, expanding the spectrum of financial applications.
+	To achieve maximum trustlessness, SIR relies on the Uniswap v3 price oracle for fixing the value of its synthetic tokens; and any user is free to instantiate a new pair of synthetic tokens if they are traded in Uniswap v3.
+	
+%	THE MITIGATION OF THE VOLATILITY DECAY IS ONE OF THE BIG DEALS!
+	
+
+
+	
+
+	\section{Pair Mechanics}
+	
+	Any user can instantiate a pair with the following properties:
+	\begin{enumerate}
+		\item Collateral token
+		\item Debt token
+		\item Target leverage ratio
+	\end{enumerate}
+	if the collateral and debt tokens are traded in a Uniswap v3 pool, and the value of the target leverage ratio is
+	\begin{equation}
+		l_\textrm{tar} = 1+2^k : k\in\{-127,-126,\ldots,127,128\}.
+	\end{equation}
+	Even though, theoretically the leverage could go as high as $3\cdot10^{38}$ and as low $1+6\cdot10^{-39}$, these values will probably never be used because of the fees that would need to be paid as described in Section~\ref{sec:leverage:stabilization}.
+	\textbf{For the sake of legibility, we assume for the rest of the paper that the collateral token is ETH and the debt token is USDC.}
+%	For any other pair of tokens simply replace the ETH and USDC symbols by the others tokens symbols.
+	The pair issues two types of synthetics:
+	\begin{enumerate}
+		\item TEA: A ``stable'' token pegged to the debt token (USDC) backed by the collateral token (ETH).
+		\item APE: A leveraged token that accrues value according to the price of ETH/USDC.
+	\end{enumerate}
+	As a meme, holders of TEA are called gentlemen and holders of APE are apes. The gentlemen and the apes coexist in \textit{symbiosis} because their operations are intertwined and cannot function without each other. TEA and APE are minted be depositing collateral token (ETH); and upon burning TEA or APE, collateral is received. The process of minting and burning requires payment of a fee.
+%	This is to incentivize liquidity providers (LPers) from staying in the pair even after a user purchases TEA/APE.
+%	The fees for TEA and APE differ according to
+%	\begin{align}
+%		f_\textrm{tea} &= 0.15\% \cdot r_\textrm{tar}\\
+%		f_\textrm{ape} &= 0.15\% \cdot l_\textrm{tar}
+%	\end{align}
+	TEA is pegged 1-to-1 to the debt token (USDC) and APE is pegged 1-to-1 to the collateral token (ETH). While APE's value does not fluctuate, it uses a rebasing mechanism to accrue/lose value when the price of ETH/USDC increases/decreases. For example, assuming 2x leverage, if the price of ETH appreciated 100\% with respect to USDC, then a wallet holding 1 APE would later hold 3 APE.
+	All collateral deposited in the system by purchasing TEA or APE is pooled together in a 
+	reserve. 
+	The reserve serves a a dual purpose: (1) it backs up the value of the stable token TEA, and (2) it is used by apes as margin, making the system capital efficient.
+
+	
+
+
+
+	\subsection{TEA: Stable Token}
+
+	Holders of TEA tokens are called gentlemen.
+	By depositing $y$ units of collateral (ETH), $x$ units of the stable token TEA are minted according to
+	\begin{equation} \label{eq:SIR_price} 
+		x = y \cdot p \quad[\text{TEA}] 
+	\end{equation}
+	where $p$ is the current spot price of the collateral token versus debt token (ETH/USDC).	
+	Alternatively, TEA can be burnt to receive collateral according to \eqref{eq:SIR_price}.
+	Let $T$ and $A$ be the circulating supplies of TEA and APE, respectively, let $C$ be the supply of collateral in the reserve, and let $p$ be the ETH/USDC price. The collateralization ratio is defined as
+	\begin{equation} \label{eq:collateralization_factor}
+		r = \frac{p\,C}{T}.
+	\end{equation}
+	While $r\geq1$, TEA remains fully backed by the collateral and the price of TEA remains pegged to the debt token. When $r<1$ because of a price drop on the ETH/USDC pair, the system can become undercollateralized, and the apes are liquidated, meaning they lose any claims to the deposited collateral. If there was a bankrun not all gentlemen could redeem TEA at their ticker value. The system deals with it by rebasing all TEA balances such that $r=1$ again. For instance, if the price was to drop such that $r=0.5$, then all TEA balances would be cut in half. Each pair has its own collateralization ratio ($r_\textrm{tar}$). Section~\ref{sec:leverage} will present the economic incentives designed to keep the collateralization ratio stable.
+	
+	% Explain the features from this stable token
+
+	
+	\subsection{APE: Leveraged Token} \label{sec:APE}
+	
+	
+%	As explained in detail later in Section~\ref{sec:leverage}, the APE token value is 
+	Holders of APE tokens are called apes. By depositing $y$ units of collateral (ETH), $y$ units of the token APE are minted; and conversely, ETH can be withdrawn by burning APE.
+%	$C = T/p +A$
+	From the previous section, the minimum collateral backing the balances of gentlemen is $T/p$, so the excess collateral is defined as
+	\begin{equation} \label{eq:exc2tot}
+		C_\text{exc} = C-\frac{T}{p}.
+	\end{equation}
+	APE represents a pro-rata claim on all excess ETH.
+	Let $\mathcal{G}$ be the current set of apes, and $\{z_i\}_{i\in \mathcal{G}}$ their APE balances. As the price of ETH increases, so does the excess collateral; and the converse is also true. APE is pegged 1-to-1 to ETH, and so whenever the excess collateral changes, all apes' balances are rebased
+	\begin{equation} \label{eq:rebase}
+		z_i' = z_i\frac{C_\text{exc}}{A} \quad\text{for all }i,
+	\end{equation}
+	such that the new supply of APE
+	\begin{equation} \label{eq:TEA_supply}
+		A' = \sum_{i\in \mathcal{G}} z_i' = C_\text{exc}.
+	\end{equation}
+	Apes are effectively on a leveraged long trade with capital $C$ and margin (borrowed capital) $T/p$, where $p$ is the spot price. Upon defining the leverage ratio as the total capital divided by the equity, the leverage ratio of all apes turns out to be
+	\begin{equation} \label{eq:leverage:formula}
+		l = \frac{C}{C_\text{exc}} = 1+\frac{T/p}{A}.
+	\end{equation}
+	because $C_\text{exc}=A$ and $C = T/p +A$ after rebasing.
+
+	Each pair has its own target leverage ($l_\textrm{tar}$) to which the actual leverage ($l$) should converge to.
+	While the leverage is variable and depends on the systems reserves and spot price, in the next section economic incentives are described for stabilizing the true leverage ratio around its target value. This is different from standard margin trading where the leverage ratio is fixed at the start of the trade only. See Fig.~\ref{fig:leverage} for a comparison between normal and perfectly rebalanced leverage.
+	\begin{figure}
+		\centering
+		\begin{tikzpicture}
+			\begin{axis}[
+					xlabel={ETH Price [USD]},
+					ylabel={Equity [ETH]},
+					legend pos=north west,
+					legend cell align={left},
+					xmin=1e3,xmax=1e4,
+				]
+				\addplot[color=lines-1,thick,mark=none] table[x=price,y=lev1] {./Data/leverage.dat};
+				\addplot[color=lines-2,thick,mark=none] table[x=price,y=levCnt1] {./Data/leverage.dat};
+				\addplot[color=lines-3,thick,mark=none] table[x=price,y=lev3] {./Data/leverage.dat};
+				\legend{$l=1.5$,$l=1.5$ continously rebalanced,$l=3$}
+			\end{axis}
+		\end{tikzpicture}
+		\caption{Comparison between normal margin trading and margin trading with continuously rebalanced leverage. The ordinate plots the ETH-denominated equity for a margin long ETH/USD position with an inital capital of 1 ETH. The leverage ratio is defined as the total amount of capital divided by the initial capital. A margin position with leverage $l$ will return a maximum profit of $l$ [ETH] (see \eqref{eq:asymptotic_lev}), whereas with a continuously rebalanced leverage the upside is unbounded.}
+		\label{fig:leverage}
+	\end{figure} 
+	If the price declines steeply and $r\leq1$, then $C_\text{exc}\leq0$ and all APE balances are rebased to 0, effectively causing a wide-system ape slaughter.
+
+
+	
+
+
+
+	\section{Leverage Mechanics} \label{sec:leverage}
+	
+	Combining the collateralization and leverage ratio formulas, \eqref{eq:collateralization_factor} and  \eqref{eq:leverage:formula} respectively, we find that they are both related through the invariant
+	\begin{equation} \label{eq:leverage:invariant}
+		(r-1)(l-1) = 1.
+	\end{equation}
+	Thus, the leverage ratio in any pair can be easily computed from the collateralization ratio, and vice-versa. For instance, if-and-only-if $r=3$ then $l=1.5$, and if-and-only-if $r=1.5$ then $l=3$. From \eqref{eq:collateralization_factor} and \eqref{eq:leverage:formula}, we know the price affects the collateralization ratio, and therefore, the leverage ratio. Next, we look into how the minting/burning of TEA and APE affects the leverage ratio.
+	
+	Let $C'$ be the collateral supply after a user deposits/withdraws $y$ ETH and mints/burns $yp$ TEA. Then, the new leverage ratio is
+	\begin{equation}
+		l' = \frac{C'}{C_\text{exc}'} = \frac{C+y}{C_\text{exc}} = l +\frac{y}{C_\text{exc}}
+	\end{equation}
+	Hence, if new TEA is minted by depositing ETH the leverage ratio increases; and if TEA is burnt to withdraw ETH ($y<0$), then the leverage ratio decreases.
+
+	Let $C$ and $C_\text{exc}'$ be the collateral supply and excess collateral after a user deposits/withdraws $y$ ETH for $y$ APE. Then, the new leverage ratio is
+	\begin{equation}
+		l' = \frac{C'}{C_\text{exc}'} = \frac{C+y}{C_\text{exc}+y} = l \frac{1+y/C}{1+y/C_\text{exc}}
+	\end{equation}
+	Hence, if new APE is minted by depositing ETH the leverage ratio decreases; and if APE is burnt to withdraw ETH ($y<0$), then the leverage ratio increases.
+	
+	
+	
+	
+	\subsection{Leverage Stabilization} \label{sec:leverage:stabilization}
+
+	Economic incentives are used to stabilize the leverage such that $l\rightarrow l_\textrm{tar}$ and $r\rightarrow r_\textrm{tar}$.
+	A fee is collected on all mints and burns of TEA/APE. Let $f_\textrm{TKN}^\textrm{ACT}$ denote the fee where $\textrm{TKN}\in\{\textrm{tea},\textrm{ape}\}$ and $\textrm{ACT}\in\{\textrm{mint},\textrm{burn}\}$. For example for a purchase of $x$ TEA, a user must deposit $(1+f_\textrm{tea}^\textrm{mint})x/p$ ETH. If TEA is too abundant in the system, $r<r_\textrm{tar}$, then fees are distributed to apes to incentivize more minting of APE. Conversely, if APE is too abundant in the system, $r>r_\textrm{tar}$, then fees are paid to gentlemen to incentivize more minting of TEA. The line between users and liquidity providers (LPers) is blurry in SIR and it will vary depending on the state of the system. For instance, if users are minting APE to go long ETH/USDC with leverage $l_\textrm{tar}=3$, LPers will be incentivized to mint TEA to accrue the fees. On the other hand, if users are minting TEA with a collateralization ratio of $r_\textrm{tar}=3$ because they are interested in a stablecoin pegged to USDC and backed by ETH, then LPers will mint APE to accrue the fees. Essentially LPers will take the opposite side of the trade.
+	
+	The fee values are set to:
+	\begin{align}
+		f_\textrm{tea}^\textrm{mint} &= \frac{r_\textrm{tar}-1}{\frac{r_\textrm{tar}-1}{r-1}+1} 0.3 \\
+		f_\textrm{tea}^\textrm{burn} &= \frac{r-1}{\frac{r_\textrm{tar}-1}{r-1}+1} 0.3 \\
+		f_\textrm{ape}^\textrm{mint} &= \frac{l_\textrm{tar}-1}{\frac{l_\textrm{tar}-1}{l-1}+1} 0.3 \\
+		f_\textrm{ape}^\textrm{burn} &= \frac{l-1}{\frac{l_\textrm{tar}-1}{l-1}+1} 0.3
+	\end{align}
+	because they satisfy the following equalities
+	\begin{align}
+		f_\textrm{tea} \triangleq f_\textrm{tea}^\textrm{mint} +f_\textrm{tea}^\textrm{burn} &= (r-1)0.3 \label{eq:fee:tea} \\
+		f_\textrm{ape} \triangleq f_\textrm{ape}^\textrm{mint} +f_\textrm{ape}^\textrm{burn} &= (l-1)0.3 \label{eq:fee:ape} \\
+		f_\textrm{tea}^\textrm{mint}/f_\textrm{tea}^\textrm{burn} &= \frac{r_\textrm{tar}-1}{r-1} \label{eq:fee_ratio:tea} \\
+		f_\textrm{ape}^\textrm{mint}/f_\textrm{ape}^\textrm{burn} &= \frac{r-1}{r_\textrm{tar}-1}. \label{eq:fee_ratio:ape}
+	\end{align}
+	This set of fees have the following features:
+	\begin{enumerate}
+		\item Long-term leveraged positions: The fees are split into to mint and burn fees so that LPers are incentivized to maintain their liquidity in the pool. Contrary to standard margin trading in centralized exchanges, fees paid by users are independent of how long they hold the tokens. This property in combination with the fact that continuously rebalancing the leverage  mitigates the probablity of liquidation (see Appendix~\ref{app:rebalancing}), makes the APE token ideal for long-term leveraged positions.
+		\item Fees proportional to amount of liquidity used: The fees paid by gentlemen \eqref{eq:fee:tea} and apes \eqref{eq:fee:ape} are proportional to the amount of liquidity that they require. For instance, a user minting $y$ APE on a pair with leverage $l$ will require $(l-1)yp$ TEA in liquidity in the pair. So it is logical that an ape pays more in fees when using $l=9$ leverage than $l=2$ leverage.
+		\item Variable fees to incentivize minting or burning: By \eqref{eq:fee_ratio:tea}, when TEA is scarce and $r>r_\textrm{tar}$, the fee charged for minting TEA is decreased while the fee for burning TEA is increased, encouraging higher TEA liquidity. Similarly, by \eqref{eq:fee_ratio:ape} when APE is scarce and $r<r_\textrm{tar}$, the fee charged for minting APE is decreased while the fee for burning APE is increased, encouraging higher APE liquidity.
+	\end{enumerate}
+	 
+	
+	
+
+	
+	
+	
+	\section{Tokenomics}
+	
+%	This sections glosses over different economic aspects of SIR.
+	
+	
+	\subsection{Fungible Vaults}
+	
+	Interesting parallels exist between MakerDAO and SIR. Very roughly speaking a user of MakerDAO deposits some type of collateral, such as ETH, into a vault and mints DAI which is pegged to the USD. The user can then further invest such DAI into ETH, effectively leveraging up his position on ETH. The ETH locked in the vault can always be recovered by paying his debt in DAI. Because every user chooses his own collateralization ratio, the vaults are non-fungible.
+	In both systems, MakerDAO and SIR, the leverage ratio is exactly related to the collateralization ratio through the formula \eqref{eq:leverage:invariant}. When the collateralization factor is large, the leverage and risk of liquidation are small, and vice-versa. For example possible values are $(r,l)=(1.5,3),(2,2),(3,1.5),(1.11,10)$. 
+	The key difference with MakerDAO is that in SIR any user minting APE on the same pair also has the same leverage, making it a ``fungible vault''. This fungibility enables in turn to tokenize the margin long position into APE.
+	\begin{table}
+		\centering
+		\caption{Margin Trade with MakerDAO vs.\ SIR}
+		\resizebox{1\textwidth}{!}{
+			\begin{tabular}{p{.2\textwidth}p{.3\textwidth}p{.3\textwidth}}
+				\toprule
+				& 	MakerDAO    & 	SIR \\
+				\midrule
+				Stable tokens	&	DAI	& 	TEA tokens \\ \addlinespace[.3em]
+				\rowcolor[gray]{.9}
+				Peg	&	USD	& 	Any token in Uniswap v3 \\ \addlinespace[.3em]
+				Collateral	&	Vetted tokens	&  Any token in Uniswap v3 \\ \addlinespace[.3em]
+				\rowcolor[gray]{.9}
+				Vault	&	Non-fungible	&  Fungible \\ \addlinespace[.3em]
+				Tokenized margin position	&	No	&  Yes, APE tokens	\\ \addlinespace[.3em]
+				\rowcolor[gray]{.9}
+				Leverage type	&	Fixed at vault creation	&  Continuously rebalanced 	\\ \addlinespace[.3em]
+				Governance	&	Yes, DAO governed by MKR holders	& 	No, totally permissionless \\ \addlinespace[.3em]
+				\rowcolor[gray]{.9}
+				Liquidation penalty	&	Yes, paid by the vault creator	&  None	\\ \addlinespace[.3em]
+				Undercollateralization risk	&	Beared by MKR holders &  Beared by TEA holders	\\ \addlinespace[.3em]
+				\bottomrule
+		\end{tabular}}
+		\label{tab:DAI}
+	\end{table}
+	Moreover, while in MakerDAO the leverage is fixed at the time of minting DAI, in SIR the leverage can fluctuate and is stabilized by economic incentives, resulting in a continuously rebalanced leverage ratio as described in Appendix~\ref{app:rebalancing}.
+	
+	
+	In MakerDAO when the collateralization ratio approaches 1 ($r\rightarrow1^+$), the collateral is put in auction and liquidators can burn DAI in exchange for the collateral at an advantageous price. In the case of a sudden large price drop, the liquidation may not occur in time and the vault may become undercollateralizaed, consequently hinging the peg of DAI. This risk is mitigated by making the holders of MKR, their governance token, bear the cost of it; and in such situation more MKR is printed and sold for DAI to restore the vaults.
+	In SIR, the system is maintained at a constant collateralization ratio thanks to the liquidity providers who are rewarded with the collected fees. If LPers fail to keep the system overcollateralized, the holders of TEA are the next line of defense and their balances are rebased with a loss.
+	
+	
+	
+	\subsection{Economics of Liquidity Providers}
+	
+	In SIR liquidity providers (LPers) are users who mint TEA or APE to collect the fees described in Section~\ref{sec:leverage:stabilization}. Thus, if $r>r_\textrm{tar}$, LPers will mint TEA, and if $r<r_\textrm{tar}$, LPers will mint APE. 	
+	LPers can hedge their positions by trading some of their yield. For instance, in the pair with USDC as debt token and ETH a collateral, assume most users mint APE because they wish to long ETH/USDC with leverage. Any LPer maximizing yield will provide liquidity by minting TEA, which is pegged to USDC. Alternatively, he could buy a convex combination of tokens, i.e., for $y$ in collateral (ETH), mint $apy$ TEA and $(1-a)y$ APE, where $0\leq a\leq1$ and $p$ is the spot price. For $a=1$, the LPer's exposure is 100\% TEA, whereas for $a=1$ the LPer holds 100\% APE but he is no longer earning fees. For any other value of $a$ the LPer's equity as price changes from $p$ to $p'$ is
+	\begin{equation}
+		z' = \frac{apy}{p'}+(1-a)y\left[l\left(1-\frac{p}{p'}\right)+\frac{p}{p'}\right]
+	\end{equation}
+	where the second summand's expression is obtained from \eqref{eq:equity}. Let $i$ be the current yield per unit of TEA, then the yield associated to this mix position of TEA and APE is simply
+	\begin{equation}
+		i' = a\cdot i.
+	\end{equation}
+	For example, if the LPer wished to have exposure to the collateral (ETH) only, then he should pick $a=1/r$ because $z'=y$, even though then the yield would be reduced to $i'=i/r$.
+	
+	Another important fact to bear in mind when providing liquidity is that APE is subject to rebalancing losses, also known as volatility decay. As described in Appendix~\ref{app:leverage:rebalancing}, if (1) the price changes, then (2) the leverage is rebalanced such that $l=l_\textrm{tar}$, and lastly (3) the price reverts back to the initial price, apes suffer a rebalancing loss \eqref{eq:rebalancing_loss}. Such loss can be mitigated by rebalancing on every micro price fluctuation as describred in Appendix~\ref{app:rebalancing}. With this in mind, some parallels exist with respect to automated market makers exchanges (AMM) as summarized in Table~\ref{tab:DEX}.
+	\begin{table}
+		\centering
+		\caption{Parallelisms between AMM and SIR}
+		\resizebox{.9\textwidth}{!}{
+		\begin{tabular}{p{.15\textwidth}p{.27\textwidth}p{.27\textwidth}}
+				\toprule
+				& 	AMM    & 	SIR \\
+				Liquidity 	& Minimizes price slippage	&  Minimizes leverage slippage \\ \addlinespace[.3em]
+				\rowcolor[gray]{.9}
+				Invariant formula	&	Constant-product formula	& 	Constant collateralization-leverage \eqref{eq:leverage:invariant} \\ \addlinespace[.3em]
+				LP risk 	& Impermanent loss	& Rebalancing loss \\ \addlinespace[.3em]
+				\bottomrule
+		\end{tabular}}
+		\label{tab:DEX}
+	\end{table}
+
+	
+	
+	\subsection{Liquidations}
+	
+	Because APE is a leveraged token, there exists the risk of liquidation. When price drops substantially, it is possible for the reserve to shrink to the point that the system becomes undercollateralized, and as explained in Section~\ref{sec:APE}, in such case the rebasement procedure voids all existing APE balances. Nonetheless, the system is designed with economic incentives to encourage a stable collateralization ratio which mitigates the risk of liquidation. In addition the price oracle does not use the instant price but rather a TWAP to mitigate the effect of unexpected spikes on the price.
+	
+	
+
+	
+
+	
+	
+	\newpage
+	\appendices
+	
+	\section{Leverage} \label{app:margin_trading}
+	
+
+	Assume we borrow $d$ [USDC] against $z$ [ETH] to purchase more ETH at the current price of $p$. Leverage is defined as the ratio between total capital and equity:
+	\begin{equation}
+		l = \frac{z+d/p	}{z} = 1+\frac{d}{pz}.
+	\end{equation}
+	If the price changes from $p$ to $p'$, then we still owe $d$ USDC, but only $d/p'$ in terms of ETH. Therefore, the equity becomes
+	\begin{equation} \label{eq:equity}
+		z' = z -\frac{d}{p'} +\frac{d}{p} = z\left[l\left(1-\frac{p}{p'}\right)+\frac{p}{p'}\right] \quad\text{[ETH]}.
+	\end{equation}
+	Typically, when margin trading in an exchange, if the ETH price declines such that equity is zero then the position is liquidated to pay the debt and the trader loses his entire balance. By enforcing $z'=0$, we find that the liquidation price is
+	\begin{equation}
+		p_\text{liq} =\left(1-\frac{1}{l}\right)p. 
+	\end{equation}
+	For instance, for $l=2$ the price cannot decline more than 50\%, and for $l=10$ the price cannot decline more than 10\% to avoid liquidation. The higher the leverage the higher the risk of liquidation but also the higher potential profit because
+	\begin{equation} \label{eq:asymptotic_lev}
+		\lim\limits_{p'\rightarrow+\infty} z' = z\cdot l.
+	\end{equation}
+
+
+	\subsection{Leverage Rebalancing} \label{app:leverage:rebalancing}
+	
+	Following up on the previous section, assume that after the price changes ($p\rightarrow p'$), new debt is taken/ paid off ($d\rightarrow d'$) such that the leverage remains constant
+	\begin{equation}
+		\frac{z'+d'/p'}{z'} = l,
+	\end{equation}
+	which can be reformulated as $d'=(l-1)p'z'$.
+	Subsequently, the price returns to its initial value ($p'\rightarrow p$), and therefore from \eqref{eq:equity} the new equity is
+	\begin{align} 
+		z'' &= z' -\frac{d'}{p} +\frac{d'}{p'}  \\
+		&= z\left[1-(l-1)l\left(\frac{p}{p'}+\frac{p'}{p}-2\right)\right] \quad\text{[ETH].} \label{eq:equity:fluctuation}
+	\end{align}
+	Unless no leverage is used ($l=1$) or the price does not vary ($p'=p$), the margin trader always loses capital in the process of rebalancing because $z''<z$. Thus, if the price is mean-reverting, continuously rebalancing the leverage is a losing strategy in the long run. Let $L = (z-z'')/z$ be the rebalancing loss, its expression is
+	\begin{equation} \label{eq:rebalancing_loss}
+		L = (l-1)l\left(\frac{p}{p'}+\frac{p'}{p}-2\right).
+	\end{equation}
+	
+	
+	\subsection{Continuous Rebalancing} \label{app:rebalancing}
+	
+	The rebalancing loss can be avoided by not rebalancing at all (i.e., $z'=z$ if $p'=p$ in \eqref{eq:equity}), or alternatively, by rebalancing at the slightest price change as proved next. From \eqref{eq:equity}, the increase rate of equity versus price is described by the following limit
+	\begin{equation}
+		\frac{\mathrm{d}z}{\mathrm{d}p} = \lim\limits_{p'\rightarrow p} \frac{z'-z}{p'-p} = \frac{l-1}{p}z.
+	\end{equation}
+	This is a first-order ordinary differential equation whose solution is
+	\begin{equation}
+		z' = z \left(\frac{p'}{p}\right)^{l-1} \quad\text{[ETH].}
+	\end{equation}
+	Thus, when leverage is continuously rebalanced on every infinitessimal price change, the price is amplified exponentially by the leverage $l$ without inducing rebalancing losses since $z'=z$ if $p'=p$.
+	
+
+	
+
+
+	
+	
+%	\bibliographystyle{IEEEtran}
+%	\bibliography{IEEEabrv,./references}
+	
+%	Alternative words:
+%	Hang the batton
+	
+\end{document} 
