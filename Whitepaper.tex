@@ -294,13 +294,13 @@
 
 	Economic incentives are used to stabilize the leverage such that $l\rightarrow l_\textrm{tar}$ and $r\rightarrow r_\textrm{tar}$.
 	A fee is collected on all mints and burns of TEA/APE. Let $f_\textrm{TKN}^\textrm{ACT}$ denote the fee where $\textrm{TKN}\in\{\textrm{tea},\textrm{ape}\}$ and $\textrm{ACT}\in\{\textrm{mint},\textrm{burn}\}$. For example for a purchase of $x$ TEA, a user must deposit $(1+f_\textrm{tea}^\textrm{mint})x/p$ ETH. If TEA is too abundant in the system, $r<r_\textrm{tar}$, then fees are distributed to apes to incentivize more minting of APE. Conversely, if APE is too abundant in the system, $r>r_\textrm{tar}$, then fees are paid to gentlemen to incentivize more minting of TEA. The line between users and liquidity providers (LPers) is blurry in SIR and it will vary depending on the state of the system. For instance, if users are minting APE to go long ETH/USDC with leverage $l_\textrm{tar}=3$, LPers will be incentivized to mint TEA to accrue the fees. On the other hand, if users are minting TEA with a collateralization ratio of $r_\textrm{tar}=3$ because they are interested in a stablecoin pegged to USDC and backed by ETH, then LPers will mint APE to accrue the fees. Essentially LPers will take the opposite side of the trade.
-	
+%	Let $y$ be the the deposited/withdrawn collateral, and let $y_\textrm{fee}$ be a fee added on top, meaning the user needs a total of $y_\textrm{tot} = y+y_\textrm{fee}$.
 	The fee values are set to:
 	\begin{align}
-		f_\textrm{tea}^\textrm{mint} &= \frac{r_\textrm{tar}-1}{\frac{r_\textrm{tar}-1}{r-1}+1} 0.3 \\
+		f_\textrm{tea}^\textrm{mint} &= \frac{r_\textrm{tar}-1}{\frac{r_\textrm{tar}-1}{r-1}+1} 0.3 \label{eq:fee:tea_mint} \\
 		f_\textrm{tea}^\textrm{burn} &= \frac{r-1}{\frac{r_\textrm{tar}-1}{r-1}+1} 0.3 \\
 		f_\textrm{ape}^\textrm{mint} &= \frac{l_\textrm{tar}-1}{\frac{l_\textrm{tar}-1}{l-1}+1} 0.3 \\
-		f_\textrm{ape}^\textrm{burn} &= \frac{l-1}{\frac{l_\textrm{tar}-1}{l-1}+1} 0.3
+		f_\textrm{ape}^\textrm{burn} &= \frac{l-1}{\frac{l_\textrm{tar}-1}{l-1}+1} 0.3 \label{eq:fee:ape_burn}
 	\end{align}
 	because they satisfy the following equalities
 	\begin{align}
@@ -315,6 +315,25 @@
 		\item Fees proportional to amount of liquidity used: The fees paid by gentlemen \eqref{eq:fee:tea} and apes \eqref{eq:fee:ape} are proportional to the amount of liquidity that they require. For instance, a user minting $y$ APE on a pair with leverage $l$ will require $(l-1)yp$ TEA in liquidity in the pair. So it is logical that an ape pays more in fees when using $l=9$ leverage than $l=2$ leverage.
 		\item Variable fees to incentivize minting or burning: By \eqref{eq:fee_ratio:tea}, when TEA is scarce and $r>r_\textrm{tar}$, the fee charged for minting TEA is decreased while the fee for burning TEA is increased, encouraging higher TEA liquidity. Similarly, by \eqref{eq:fee_ratio:ape} when APE is scarce and $r<r_\textrm{tar}$, the fee charged for minting APE is decreased while the fee for burning APE is increased, encouraging higher APE liquidity.
 	\end{enumerate}
+
+
+	The formulas in \eqref{eq:fee:tea_mint}--\eqref{eq:fee:ape_burn} cannot be directly used for the calculation of the fees unless the minted or burnt amounts are negligible compared to the reserve. Let $y$ denote the amount of collateral deposited/withdrawn when minting/burning, let $y_\textrm{fee}$ denote the amount of collateral paid in fees when minting/burning, and let . In the more general case, the amount of collateral paid in fees is
+	\begin{equation}
+		y_\textrm{fee} = 
+		\begin{cases}
+			\int_{0}^{y} f_\textrm{tea}^\textrm{mint} \,\mathrm{d}\varepsilon = 0.3A \ln\left(\frac{\frac{r_\textrm{tar}-1}{r'-1} +1}{\frac{r_\textrm{tar}-1}{r-1}+1}\right)	& \text{for minting TEA} \\
+			\int_{0}^{y} f_\textrm{tea}^\textrm{burn} \,\mathrm{d}\varepsilon = 0.3A \ln\left(\frac{\frac{r'-1}{r_\textrm{tar}-1}+1}{\frac{r-1}{r_\textrm{tar}-1} +1}\right)	& \text{for burning TEA} \\
+			\int_{0}^{y} f_\textrm{ape}^\textrm{mint} \,\mathrm{d}\varepsilon = 0.3\frac{T}{p} \ln\left(\frac{\frac{l_\textrm{tar}-1}{l'-1} +1}{\frac{l_\textrm{tar}-1}{l-1}+1}\right)	& \text{for minting APE} \\
+			\int_{0}^{y} f_\textrm{ape}^\textrm{burn} \,\mathrm{d}\varepsilon = 0.3\frac{T}{p} \ln\left(\frac{\frac{l'-1}{l_\textrm{tar}-1}+1}{\frac{l-1}{l_\textrm{tar}-1} +1}\right)	& \text{for burning APE}
+		\end{cases}
+	\end{equation}
+	where $r'$ and $l'$ denote the collateralization and leverage ratios, respectively, after the mint or burn. 
+	
+	However, in practice, users will want the fee directly substracted from the deposited/withdrawn collateral, rather than adding the fee on top. Thus, upon defining $y_\textrm{tot} \triangleq y+y_\textrm{fee}$, we compute $y$ as a function of $y_\textrm{tot}$ with the Newton's method
+	\begin{equation}
+		y^{n+1} = y^{n} +\frac{y_\textrm{tot} -y^{n} - y_\textrm{fee}(y^{n})}{2 \frac{\mathrm{d}y_\textrm{fee}}{\mathrm{d}y}(y^{n})}
+	\end{equation}
+	until convergence is obtained, i.e., $y=\lim_{n\rightarrow\infty}y^{n}$.
 	 
 	
 	
