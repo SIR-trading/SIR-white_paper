@@ -331,7 +331,7 @@
 	
 	However, in practice, users will want the fee directly substracted from the deposited/withdrawn collateral, rather than adding the fee on top. Thus, upon defining $y_\textrm{tot} \triangleq y+y_\textrm{fee}$, we compute $y$ as a function of $y_\textrm{tot}$ with the Newton's method
 	\begin{equation}
-		y^{n+1} = y^{n} +\frac{y_\textrm{tot} -y^{n} - y_\textrm{fee}(y^{n})}{2 \frac{\mathrm{d}y_\textrm{fee}}{\mathrm{d}y}(y^{n})}
+		y^{n+1} = y^{n} +\frac{y_\textrm{tot} -y^{n} - y_\textrm{fee}(y^{n})}{1+ \frac{\mathrm{d}y_\textrm{fee}}{\mathrm{d}y}(y^{n})}
 	\end{equation}
 	until convergence is obtained, i.e., $y=\lim_{n\rightarrow\infty}y^{n}$.
 	 
