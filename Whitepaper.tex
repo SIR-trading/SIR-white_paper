@@ -297,9 +297,9 @@
 %	Let $y$ be the the deposited/withdrawn collateral, and let $y_\textrm{fee}$ be a fee added on top, meaning the user needs a total of $y_\textrm{tot} = y+y_\textrm{fee}$.
 	The fee values are set to:
 	\begin{align}
-		f_\textrm{tea}^\textrm{mint} &= \frac{r_\textrm{tar}-1}{\frac{r_\textrm{tar}-1}{r-1}+1} 0.003 \label{eq:fee:tea_mint} \\
+		f_\textrm{tea}^\textrm{mint} &= \frac{0.003}{l_\textrm{tar}+l-2}  \label{eq:fee:tea_mint} \\
 		f_\textrm{tea}^\textrm{burn} &= \frac{r-1}{\frac{r_\textrm{tar}-1}{r-1}+1} 0.003 \\
-		f_\textrm{ape}^\textrm{mint} &= \frac{l_\textrm{tar}-1}{\frac{l_\textrm{tar}-1}{l-1}+1} 0.003 \\
+		f_\textrm{ape}^\textrm{mint} &= \frac{0.003}{r_\textrm{tar}+r-2} \\
 		f_\textrm{ape}^\textrm{burn} &= \frac{l-1}{\frac{l_\textrm{tar}-1}{l-1}+1} 0.003 \label{eq:fee:ape_burn}
 	\end{align}
 	because they satisfy the following equalities
@@ -321,10 +321,14 @@
 	\begin{equation}
 		y_\textrm{fee} = 
 		\begin{cases}
-			\int_{0}^{y} f_\textrm{tea}^\textrm{mint} \,\mathrm{d}\varepsilon = 0.003 A \ln\left(\frac{\frac{r_\textrm{tar}-1}{r'-1} +1}{\frac{r_\textrm{tar}-1}{r-1}+1}\right)	& \text{for minting TEA} \\
-			\int_{0}^{y} f_\textrm{tea}^\textrm{burn} \,\mathrm{d}\varepsilon = 0.003 A \ln\left(\frac{\frac{r'-1}{r_\textrm{tar}-1}+1}{\frac{r-1}{r_\textrm{tar}-1} +1}\right)	& \text{for burning TEA} \\
-			\int_{0}^{y} f_\textrm{ape}^\textrm{mint} \,\mathrm{d}\varepsilon = 0.003\frac{T}{p} \ln\left(\frac{\frac{l_\textrm{tar}-1}{l'-1} +1}{\frac{l_\textrm{tar}-1}{l-1}+1}\right)	& \text{for minting APE} \\
-			\int_{0}^{y} f_\textrm{ape}^\textrm{burn} \,\mathrm{d}\varepsilon = 0.003\frac{T}{p} \ln\left(\frac{\frac{l'-1}{l_\textrm{tar}-1}+1}{\frac{l-1}{l_\textrm{tar}-1} +1}\right)	& \text{for burning APE}
+			\int_{0}^{y} f_\textrm{tea}^\textrm{mint} \,\mathrm{d}\varepsilon = 0.003 A \ln\left(\frac{l'+l_\textrm{tar}-2}{l+l_\textrm{tar}-2}\right)
+			& \text{for minting TEA} \\
+			\int_{0}^{y} f_\textrm{tea}^\textrm{burn} \,\mathrm{d}\varepsilon = 0.003 A \ln\left(\frac{r'+r_\textrm{tar}-2}{r+r_\textrm{tar}-2}\right)	
+			& \text{for burning TEA} \\
+			\int_{0}^{y} f_\textrm{ape}^\textrm{mint} \,\mathrm{d}\varepsilon = 0.003\frac{T}{p} \ln\left(\frac{r'+r_\textrm{tar}-2}{r+r_\textrm{tar}-2}\right)
+			& \text{for minting APE} \\
+			\int_{0}^{y} f_\textrm{ape}^\textrm{burn} \,\mathrm{d}\varepsilon = 0.003\frac{T}{p} \ln\left(\frac{l'+l_\textrm{tar}-2}{l+l_\textrm{tar}-2}\right)
+			& \text{for burning APE}
 		\end{cases}
 	\end{equation}
 	where $r'$ and $l'$ denote the collateralization and leverage ratios, respectively, after the mint or burn. 
