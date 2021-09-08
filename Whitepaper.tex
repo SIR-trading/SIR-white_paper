@@ -152,7 +152,7 @@
 	The fees collected by the system are distributed to liquidity providers who are in charge of maintaining the constant leverage on a block by block basis.	
 %	We expect that this this level of granularity in rebalancing the leverage ratio 
 	Contrary to centralized exchanges where the margin positions only exists within their walled garden, leveraged tokens are composable and can be imported by other \textit{money legos}, expanding the spectrum of financial applications.
-	To achieve maximum trustlessness, SIR relies on the Uniswap v3 price oracle for fixing the value of its synthetic tokens; and any user is free to instantiate a new pair of synthetic tokens if they are traded in Uniswap v3.
+	To achieve maximum trustlessness, SIR relies on the Uniswap v3 price oracle for fixing the value of its synthetic tokens; and any user is free to instantiate a new pool of synthetic tokens if they are traded in Uniswap v3.
 	
 %	THE MITIGATION OF THE VOLATILITY DECAY IS ONE OF THE BIG DEALS!
 	
@@ -162,7 +162,7 @@
 
 	\section{Pair Mechanics}
 	
-	Any user can instantiate a pair with the following properties:
+	Any user can instantiate a pool with the following properties:
 	\begin{enumerate}
 		\item Collateral token
 		\item Debt token
@@ -170,23 +170,16 @@
 	\end{enumerate}
 	if the collateral and debt tokens are traded in a Uniswap v3 pool, and the value of the target leverage ratio is
 	\begin{equation}
-		l_\textrm{tar} = 1+4^k : k\in\{-127,-126,\ldots,127,128\}.
+		l_\textrm{tar} = 1+2^{2k+1} : k\in\{-3,-2,\ldots,9,10\}.
 	\end{equation}
-	Even though, theoretically the leverage could go as high as $3\cdot10^{38}$ and as low $1+6\cdot10^{-39}$, these values will probably never be used because of the fees that would need to be paid as described in Section~\ref{sec:leverage:stabilization}.
+	This makes for a theoretical minimum leverage ratio of 1.0313 and as high as 2,097,153, although practically some of these values will rarely be used.
 	\textbf{For the sake of legibility, we assume for the rest of the paper that the collateral token is ETH and the debt token is USDC.}
-%	For any other pair of tokens simply replace the ETH and USDC symbols by the others tokens symbols.
-	The pair issues two types of synthetics:
+	The pool issues two types of synthetics:
 	\begin{enumerate}
 		\item TEA: A ``stable'' token pegged to the debt token (USDC) backed by the collateral token (ETH).
 		\item APE: A leveraged token that accrues value according to the price of ETH/USDC.
 	\end{enumerate}
 	As a meme, holders of TEA are called gentlemen and holders of APE are apes. The gentlemen and the apes coexist in \textit{symbiosis} because their operations are intertwined and cannot function without each other. TEA and APE are minted be depositing collateral token (ETH); and upon burning TEA or APE, collateral is received. The process of minting and burning requires payment of a fee.
-%	This is to incentivize liquidity providers (LPers) from staying in the pair even after a user purchases TEA/APE.
-%	The fees for TEA and APE differ according to
-%	\begin{align}
-%		f_\textrm{tea} &= 0.15\% \cdot r_\textrm{tar}\\
-%		f_\textrm{ape} &= 0.15\% \cdot l_\textrm{tar}
-%	\end{align}
 	TEA is pegged 1-to-1 to the debt token (USDC) and APE is pegged 1-to-1 to the collateral token (ETH). While APE's value does not fluctuate, it uses a rebasing mechanism to accrue/lose value when the price of ETH/USDC increases/decreases. For example, assuming 2x leverage, if the price of ETH appreciated 100\% with respect to USDC, then a wallet holding 1 APE would later hold 3 APE.
 	All collateral deposited in the system by purchasing TEA or APE is pooled together in a 
 	reserve. 
@@ -209,7 +202,7 @@
 	\begin{equation} \label{eq:collateralization_factor}
 		r = \frac{p\,C}{T}.
 	\end{equation}
-	While $r\geq1$, TEA remains fully backed by the collateral and the price of TEA remains pegged to the debt token. When $r<1$ because of a price drop on the ETH/USDC pair, the system can become undercollateralized, and the apes are liquidated, meaning they lose any claims to the deposited collateral. If there was a bankrun not all gentlemen could redeem TEA at their ticker value. The system deals with it by rebasing all TEA balances such that $r=1$ again. For instance, if the price was to drop such that $r=0.5$, then all TEA balances would be cut in half. Each pair has its own collateralization ratio ($r_\textrm{tar}$). Section~\ref{sec:leverage} will present the economic incentives designed to keep the collateralization ratio stable.
+	While $r\geq1$, TEA remains fully backed by the collateral and the price of TEA remains pegged to the debt token. When $r<1$ because of a price drop on the ETH/USDC pair, the system can become undercollateralized, and the apes are liquidated, meaning they lose any claims to the deposited collateral. If there was a bankrun not all gentlemen could redeem TEA at their ticker value. The system deals with it by rebasing all TEA balances such that $r=1$ again. For instance, if the price was to drop such that $r=0.5$, then all TEA balances would be cut in half. Each pool has its own collateralization ratio ($r_\textrm{tar}$). Section~\ref{sec:leverage} will present the economic incentives designed to keep the collateralization ratio stable.
 	
 	% Explain the features from this stable token
 
@@ -239,7 +232,7 @@
 	\end{equation}
 	because $C_\text{exc}=A$ and $C = T/p +A$ after rebasing.
 
-	Each pair has its own target leverage ($l_\textrm{tar}$) to which the actual leverage ($l$) should converge to.
+	Each pool has its own target leverage ($l_\textrm{tar}$) to which the actual leverage ($l$) should converge to.
 	While the leverage is variable and depends on the systems reserves and spot price, in the next section economic incentives are described for stabilizing the true leverage ratio around its target value. This is different from standard margin trading where the leverage ratio is fixed at the start of the trade only. See Fig.~\ref{fig:leverage} for a comparison between normal and perfectly rebalanced leverage.
 	\begin{figure}
 		\centering
@@ -273,7 +266,7 @@
 	\begin{equation} \label{eq:leverage:invariant}
 		(r-1)(l-1) = 1.
 	\end{equation}
-	Thus, the leverage ratio in any pair can be easily computed from the collateralization ratio, and vice-versa. For instance, if-and-only-if $r=3$ then $l=1.5$, and if-and-only-if $r=1.5$ then $l=3$. From \eqref{eq:collateralization_factor} and \eqref{eq:leverage:formula}, we know the price affects the collateralization ratio, and therefore, the leverage ratio. Next, we look into how the minting/burning of TEA and APE affects the leverage ratio.
+	Thus, the leverage ratio in any pool can be easily computed from the collateralization ratio, and vice-versa. For instance, if-and-only-if $r=3$ then $l=1.5$, and if-and-only-if $r=1.5$ then $l=3$. From \eqref{eq:collateralization_factor} and \eqref{eq:leverage:formula}, we know the price affects the collateralization ratio, and therefore, the leverage ratio. Next, we look into how the minting/burning of TEA and APE affects the leverage ratio.
 	
 	Let $C'$ be the collateral supply after a user deposits/withdraws $y$ ETH and mints/burns $yp$ TEA. Then, the new leverage ratio is
 	\begin{equation}
@@ -313,7 +306,7 @@
 	This set of fees have the following features:
 	\begin{enumerate}
 		\item Long-term leveraged positions: The fees are split into to mint and burn fees so that LPers are incentivized to maintain their liquidity in the pool. Contrary to standard margin trading in centralized exchanges, fees paid by users are independent of how long they hold the tokens. This property in combination with the fact that continuously rebalancing the leverage  mitigates the probablity of liquidation (see Appendix~\ref{app:rebalancing}), makes the APE token ideal for long-term leveraged positions.
-		\item Fees proportional to amount of liquidity used: The fees paid by gentlemen \eqref{eq:fee:tea} and apes \eqref{eq:fee:ape} are proportional to the amount of liquidity that they require. For instance, a user minting $y$ APE on a pair with target leverage $l_\textrm{tar}$ will require $(l_\textrm{tar}-1)yp$ TEA in liquidity in the pair. So it is logical that an ape pays more in fees when using $l_\textrm{tar}=9$ leverage than $l_\textrm{tar}=2$ leverage.
+		\item Fees proportional to amount of liquidity used: The fees paid by gentlemen \eqref{eq:fee:tea} and apes \eqref{eq:fee:ape} are proportional to the amount of liquidity that they require. For instance, a user minting $y$ APE on a pool with target leverage $l_\textrm{tar}$ will require $(l_\textrm{tar}-1)yp$ TEA in liquidity in the pool. So it is logical that an ape pays more in fees when using $l_\textrm{tar}=9$ leverage than $l_\textrm{tar}=2$ leverage.
 		\item Variable fees to incentivize minting or burning: By \eqref{eq:fee_ratio:tea}, when TEA is scarce and $r>r_\textrm{tar}$, the fee charged for minting TEA is decreased while the fee for burning TEA is increased, encouraging higher TEA liquidity. Similarly, by \eqref{eq:fee_ratio:ape} when APE is scarce and $r<r_\textrm{tar}$, the fee charged for minting APE is decreased while the fee for burning APE is increased, encouraging higher APE liquidity.
 	\end{enumerate}
 	 
@@ -332,7 +325,7 @@
 	
 	Interesting parallels exist between MakerDAO and SIR. Very roughly speaking a user of MakerDAO deposits some type of collateral, such as ETH, into a vault and mints DAI which is pegged to the USD. The user can then further invest such DAI into ETH, effectively leveraging up his position on ETH. The ETH locked in the vault can always be recovered by paying his debt in DAI. Because every user chooses his own collateralization ratio, the vaults are non-fungible.
 	In both systems, MakerDAO and SIR, the leverage ratio is exactly related to the collateralization ratio through the formula \eqref{eq:leverage:invariant}. When the collateralization factor is large, the leverage and risk of liquidation are small, and vice-versa. For example possible values are $(r,l)=(1.5,3),(2,2),(3,1.5),(1.11,10)$. 
-	The key difference with MakerDAO is that in SIR any user minting APE on the same pair also has the same leverage, making it a ``fungible vault''. This fungibility enables in turn to tokenize the margin long position into APE.
+	The key difference with MakerDAO is that in SIR any user minting APE on the same pool also has the same leverage, making it a ``fungible vault''. This fungibility enables in turn to tokenize the margin long position into APE.
 	\begin{table}
 		\centering
 		\caption{Margin Trade with MakerDAO vs.\ SIR}
@@ -369,7 +362,7 @@
 	\subsection{Economics of Liquidity Providers}
 	
 	In SIR liquidity providers (LPers) are users who mint TEA or APE to collect the fees described in Section~\ref{sec:leverage:stabilization}. Thus, if $r>r_\textrm{tar}$, LPers will mint TEA, and if $r<r_\textrm{tar}$, LPers will mint APE. 	
-	LPers can hedge their positions by trading some of their yield. For instance, in the pair with USDC as debt token and ETH a collateral, assume most users mint APE because they wish to long ETH/USDC with leverage. Any LPer maximizing yield will provide liquidity by minting TEA, which is pegged to USDC. Alternatively, he could buy a convex combination of tokens, i.e., for $y$ in collateral (ETH), mint $apy$ TEA and $(1-a)y$ APE, where $0\leq a\leq1$ and $p$ is the spot price. For $a=1$, the LPer's exposure is 100\% TEA, whereas for $a=1$ the LPer holds 100\% APE but he is no longer earning fees. For any other value of $a$ the LPer's equity as price changes from $p$ to $p'$ is
+	LPers can hedge their positions by trading some of their yield. For instance, in the pool with USDC as debt token and ETH a collateral, assume most users mint APE because they wish to long ETH/USDC with leverage. Any LPer maximizing yield will provide liquidity by minting TEA, which is pegged to USDC. Alternatively, he could buy a convex combination of tokens, i.e., for $y$ in collateral (ETH), mint $apy$ TEA and $(1-a)y$ APE, where $0\leq a\leq1$ and $p$ is the spot price. For $a=1$, the LPer's exposure is 100\% TEA, whereas for $a=1$ the LPer holds 100\% APE but he is no longer earning fees. For any other value of $a$ the LPer's equity as price changes from $p$ to $p'$ is
 	\begin{equation}
 		z' = \frac{apy}{p'}+(1-a)y\left[l\left(1-\frac{p}{p'}\right)+\frac{p}{p'}\right]
 	\end{equation}
