@@ -286,28 +286,33 @@
 	\subsection{Leverage Stabilization} \label{sec:leverage:stabilization}
 
 	Economic incentives are used to stabilize the leverage such that $l\rightarrow l_\textrm{tar}$ and $r\rightarrow r_\textrm{tar}$.
-	A fee is collected on all mints and burns of TEA/APE. Let $f_\textrm{TKN}^\textrm{ACT}$ denote the fee where $\textrm{TKN}\in\{\textrm{tea},\textrm{ape}\}$ and $\textrm{ACT}\in\{\textrm{mint},\textrm{burn}\}$. For example for a purchase of $x$ TEA, a user must deposit $(1+f_\textrm{tea}^\textrm{mint})x/p$ ETH. If TEA is too abundant in the system, $r<r_\textrm{tar}$, then fees are distributed to apes to incentivize more minting of APE. Conversely, if APE is too abundant in the system, $r>r_\textrm{tar}$, then fees are paid to gentlemen to incentivize more minting of TEA. The line between users and liquidity providers (LPers) is blurry in SIR and it will vary depending on the state of the system. For instance, if users are minting APE to go long ETH/USDC with leverage $l_\textrm{tar}=3$, LPers will be incentivized to mint TEA to accrue the fees. On the other hand, if users are minting TEA with a collateralization ratio of $r_\textrm{tar}=3$ because they are interested in a stablecoin pegged to USDC and backed by ETH, then LPers will mint APE to accrue the fees. Essentially LPers will take the opposite side of the trade.
+	A fee is collected on all mints and burns of TEA/APE. Let $f_\textrm{TKN}^\textrm{ACT}$ denote the fee where $\textrm{TKN}\in\{\textrm{tea},\textrm{ape}\}$ and $\textrm{ACT}\in\{\textrm{mint},\textrm{burn}\}$.  For example for a purchase of $x$ TEA, a user must deposit $(1+f_\textrm{tea}^\textrm{mint})x/p$ ETH. If TEA is too abundant in the system, $r<r_\textrm{tar}$, then fees are distributed to apes to incentivize more minting of APE. Conversely, if APE is too abundant in the system, $r>r_\textrm{tar}$, then fees are paid to gentlemen to incentivize more minting of TEA. The line between users and liquidity providers (LPers) is blurry in SIR and it will vary depending on the state of the system. For instance, if users are minting APE to go long ETH/USDC with leverage $l_\textrm{tar}=3$, LPers will be incentivized to mint TEA to accrue the fees. On the other hand, if users are minting TEA with a collateralization ratio of $r_\textrm{tar}=3$ because they are interested in a stablecoin pegged to USDC and backed by ETH, then LPers will mint APE to accrue the fees. Essentially LPers will take the opposite side of the trade.
 %	Let $y$ be the the deposited/withdrawn collateral, and let $y_\textrm{fee}$ be a fee added on top, meaning the user needs a total of $y_\textrm{tot} = y+y_\textrm{fee}$.
 	The fee values are set to:
 	\begin{align}
-		f_\textrm{tea}^\textrm{mint} &= \frac{(r_\textrm{tar}-1)^2}{r_\textrm{tar}+r^*-2} 0.003  \label{eq:fee:tea_mint} \\
-		f_\textrm{tea}^\textrm{burn} &= \frac{1}{l_\textrm{tar}+l^*-2} 0.003  \\
-		f_\textrm{ape}^\textrm{mint} &= \frac{(l_\textrm{tar}-1)^2}{l_\textrm{tar}+l^*-2} 0.003 \\
-		f_\textrm{ape}^\textrm{burn} &= \frac{1}{r_\textrm{tar}+r^*-2} 0.003 \label{eq:fee:ape_burn}
+		f_\textrm{tea}^\textrm{mint} &= \begin{cases}
+			(r_\textrm{tar}-1)p & \text{if }r<r_\textrm{tar} \\
+			0 & \text{otherwise}
+		\end{cases} \label{eq:fee:tea_mint} \\
+		f_\textrm{tea}^\textrm{burn} &= \begin{cases}
+			(r_\textrm{tar}-1)p & \text{if }r>r_\textrm{tar} \\
+			0 & \text{otherwise}
+		\end{cases} \label{eq:fee:tea_burn} \\
+		f_\textrm{ape}^\textrm{mint} &= \begin{cases}
+			(l_\textrm{tar}-1)p & \text{if }l<l_\textrm{tar} \\
+			0 & \text{otherwise}
+		\end{cases} \\
+		f_\textrm{ape}^\textrm{burn} &= \begin{cases}
+			(l_\textrm{tar}-1)p & \text{if }l>l_\textrm{tar} \\
+			0 & \text{otherwise}
+		\end{cases} \label{eq:fee:ape_burn}
 	\end{align}
-	because they satisfy the following equalities
-	\begin{align}
-		f_\textrm{tea} \triangleq f_\textrm{tea}^\textrm{mint} +f_\textrm{tea}^\textrm{burn} &= (r_\textrm{tar}-1)0.003 \label{eq:fee:tea} \\
-		f_\textrm{ape} \triangleq f_\textrm{ape}^\textrm{mint} +f_\textrm{ape}^\textrm{burn} &= (l_\textrm{tar}-1)0.003 \label{eq:fee:ape} \\
-		f_\textrm{tea}^\textrm{mint}/f_\textrm{tea}^\textrm{burn} &= \frac{r_\textrm{tar}-1}{r^*-1} \label{eq:fee_ratio:tea} \\
-		f_\textrm{ape}^\textrm{mint}/f_\textrm{ape}^\textrm{burn} &= \frac{r^*-1}{r_\textrm{tar}-1}. \label{eq:fee_ratio:ape}
-	\end{align}
-	where $l^* = 1+4^{\lfloor k \rceil}$ and $\lfloor k \rceil$ is the closest integer to $\log_4(l-1)$.
+	where $0\leq p\leq 1$.
 	This set of fees have the following features:
 	\begin{enumerate}
-		\item Long-term leveraged positions: The fees are split into to mint and burn fees so that LPers are incentivized to maintain their liquidity in the pool. Contrary to standard margin trading in centralized exchanges, fees paid by users are independent of how long they hold the tokens. This property in combination with the fact that continuously rebalancing the leverage  mitigates the probablity of liquidation (see Appendix~\ref{app:rebalancing}), makes the APE token ideal for long-term leveraged positions.
-		\item Fees proportional to amount of liquidity used: The fees paid by gentlemen \eqref{eq:fee:tea} and apes \eqref{eq:fee:ape} are proportional to the amount of liquidity that they require. For instance, a user minting $y$ APE on a pool with target leverage $l_\textrm{tar}$ will require $(l_\textrm{tar}-1)yp$ TEA in liquidity in the pool. So it is logical that an ape pays more in fees when using $l_\textrm{tar}=9$ leverage than $l_\textrm{tar}=2$ leverage.
-		\item Variable fees to incentivize minting or burning: By \eqref{eq:fee_ratio:tea}, when TEA is scarce and $r>r_\textrm{tar}$, the fee charged for minting TEA is decreased while the fee for burning TEA is increased, encouraging higher TEA liquidity. Similarly, by \eqref{eq:fee_ratio:ape} when APE is scarce and $r<r_\textrm{tar}$, the fee charged for minting APE is decreased while the fee for burning APE is increased, encouraging higher APE liquidity.
+		\item Safe long-term leveraged positions: The fee is charged upon minting/burnning, but not while holding TEA/APE, to allow long-term holding. In combination with the fact that the leverage is continuously rebalanced by users mitigates the probablity of liquidation (see Appendix~\ref{app:rebalancing}) and volatility decay, making APE ideal for long-term leveraged positions.
+		\item Fees proportional to liquidity needed: For instance, a user minting $y$ APE on a pool with target leverage $l_\textrm{tar}$ will require $(l_\textrm{tar}-1)yp$ TEA in liquidity in the pool. So it is logical that an ape pays more in fees when using $l_\textrm{tar}=9$ leverage than $l_\textrm{tar}=2$ leverage.
+		\item On/off fee: When there is too much TEA and too little APE ($r<r_\textrm{tar}$), the TEA burning fee and the APE minting fee are turned off. The converse is true as well.
 	\end{enumerate}
 	 
 	
